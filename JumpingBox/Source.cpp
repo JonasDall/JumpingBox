@@ -3,9 +3,11 @@
 #include <chrono>
 #include <vector>
 
-sf::Color Grey(0x00CBDCCF);
-sf::Color FaintBlue(0x00BDC9FF);
-sf::Color FaintRed(0x00DE8C8A);
+sf::Color Grey(247, 249, 237, 250);
+sf::Color FaintBlue(132, 138, 250, 250);
+sf::Color FaintRed(250, 112, 103, 250);
+
+const double gravity{ .0066980665 };
 
 class Wall
 {
@@ -29,7 +31,8 @@ class Player
 {
 	sf::RectangleShape rect;
 	double movementSpeed{};
-	sf::Vector2f force{};
+	sf::Vector2f velocity{};
+	double gravityModifier{ 0.001 };
 
 public:
 	Player(sf::Vector2f size, double speed) : movementSpeed{speed}
@@ -58,13 +61,17 @@ public:
 
 	void addForce(sf::Vector2f newForce)
 	{
-		force.x += newForce.x;
-		force.y += newForce.y;
+		velocity.x += newForce.x;
+		velocity.y += newForce.y;
 	}
 
 	void updatePosition()
 	{
-		
+		addForce(sf::Vector2f(0.f, (gravity * gravityModifier)));
+
+		rect.setPosition(rect.getPosition() + velocity);
+
+		//std::cout << rect.getPosition().y << '\n';
 	}
 
 	void display(sf::RenderWindow& window)
@@ -78,9 +85,18 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(500, 500), "Box");
 	std::vector<Wall*> walls;
 
-	Player player(sf::Vector2f(20.f, 20.f), 100.f);
+	Player player(sf::Vector2f(50.f, 50.f), 100.f);
 
 	walls.push_back(new Wall(sf::Vector2f(20.f, 20.f), sf::Vector2f(250.f, 250.f)));
+
+	int loops{};
+
+	std::chrono::steady_clock::time_point programStart{ std::chrono::steady_clock::now() };
+	std::chrono::duration<float, std::milli> programDuration{};
+
+	std::chrono::duration<float, std::milli> timeDifference{};
+	std::chrono::steady_clock::time_point currentTime{ std::chrono::steady_clock::now() };
+	double deltaTime{};
 
 	while (window.isOpen())
 	{
@@ -102,7 +118,7 @@ int main()
 		}
 
 		//Logic loop
-
+		player.updatePosition();
 
 
 		// Render loop
@@ -116,6 +132,29 @@ int main()
 		player.display(window);
 
 		window.display();
+
+		//Calculate deltaTime
+		timeDifference = std::chrono::steady_clock::now() - currentTime;
+		deltaTime = timeDifference.count() / 1000;
+
+		currentTime = std::chrono::steady_clock::now();
+
+		std::cout << deltaTime << '\n';
+
+		programDuration = std::chrono::steady_clock::now() - programStart;
+
+		std::cout << "Program has run for " << programDuration.count() << " milliseconds" << '\n';
+
+		++loops;
+
+		if (programDuration.count() > 1000)
+		{
+			std::cout << "Program looped " << loops << " times" << '\n';
+			window.close();
+
+			std::cout << 1.f / deltaTime;
+		}
+
 	}
 
 	for (unsigned int i{}; i < walls.size(); ++i)
