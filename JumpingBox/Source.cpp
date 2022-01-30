@@ -7,7 +7,7 @@ sf::Color Grey(247, 249, 237, 250);
 sf::Color FaintBlue(132, 138, 250, 250);
 sf::Color FaintRed(250, 112, 103, 250);
 
-const double gravity{ .0066980665 };
+const float gravity{ 9.80665 };
 
 class Wall
 {
@@ -32,7 +32,7 @@ class Player
 	sf::RectangleShape rect;
 	double movementSpeed{};
 	sf::Vector2f velocity{};
-	double gravityModifier{ 0.001 };
+	double gravityModifier{ 100 };
 
 public:
 	Player(sf::Vector2f size, double speed) : movementSpeed{speed}
@@ -65,11 +65,13 @@ public:
 		velocity.y += newForce.y;
 	}
 
-	void updatePosition()
+	void updatePosition(double deltaTime)
 	{
-		addForce(sf::Vector2f(0.f, (gravity * gravityModifier)));
+		addForce(sf::Vector2f(0.f, (gravity * gravityModifier * deltaTime)));
 
-		rect.setPosition(rect.getPosition() + velocity);
+		sf::Vector2f deltaPosition{ sf::Vector2f((velocity.x * deltaTime), velocity.y *deltaTime) };
+
+		rect.move(deltaPosition);
 
 		//std::cout << rect.getPosition().y << '\n';
 	}
@@ -88,11 +90,6 @@ int main()
 	Player player(sf::Vector2f(50.f, 50.f), 100.f);
 
 	walls.push_back(new Wall(sf::Vector2f(20.f, 20.f), sf::Vector2f(250.f, 250.f)));
-
-	int loops{};
-
-	std::chrono::steady_clock::time_point programStart{ std::chrono::steady_clock::now() };
-	std::chrono::duration<float, std::milli> programDuration{};
 
 	std::chrono::duration<float, std::milli> timeDifference{};
 	std::chrono::steady_clock::time_point currentTime{ std::chrono::steady_clock::now() };
@@ -118,7 +115,7 @@ int main()
 		}
 
 		//Logic loop
-		player.updatePosition();
+		player.updatePosition(deltaTime);
 
 
 		// Render loop
@@ -140,21 +137,6 @@ int main()
 		currentTime = std::chrono::steady_clock::now();
 
 		std::cout << deltaTime << '\n';
-
-		programDuration = std::chrono::steady_clock::now() - programStart;
-
-		std::cout << "Program has run for " << programDuration.count() << " milliseconds" << '\n';
-
-		++loops;
-
-		if (programDuration.count() > 1000)
-		{
-			std::cout << "Program looped " << loops << " times" << '\n';
-			window.close();
-
-			std::cout << 1.f / deltaTime;
-		}
-
 	}
 
 	for (unsigned int i{}; i < walls.size(); ++i)
