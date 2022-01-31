@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <vector>
+#include <cstdlib>
 
 //Custom colors
 sf::Color Grey(247, 249, 237, 250);
@@ -22,12 +23,23 @@ public:
 	{
 		shape.setSize(size);
 		shape.setPosition(location);
+		shape.setOrigin(sf::Vector2f(size.x / 2, size.y / 2));
 		shape.setFillColor(FaintBlue);
 	}
 
 	void display(sf::RenderWindow& window)
 	{
 		window.draw(shape);
+	}
+
+	sf::Vector2f getPosition()
+	{
+		return shape.getPosition();
+	}
+
+	sf::Vector2f getSize()
+	{
+		return shape.getSize();
 	}
 };
 
@@ -39,11 +51,12 @@ class Player
 	double gravityModifier{ 100 };
 
 public:
-	Player(sf::Vector2f size)
+	Player(sf::Vector2f size, sf::Vector2f startPosition)
 	{
 		rect.setSize(size);
-		rect.setFillColor(FaintRed);
 		rect.setOrigin(sf::Vector2f(size.x / 2, size.y / 2));
+		rect.setPosition(startPosition);
+		rect.setFillColor(FaintRed);
 	}
 
 	void characterInput(sf::Event& event)
@@ -95,6 +108,31 @@ public:
 	{
 		window.draw(rect);
 	}
+
+	sf::Vector2f getVelocity()
+	{
+		return velocity;
+	}
+
+	void setVelocity()
+	{
+		velocity = sf::Vector2f(0.f, 0.f);
+	}
+
+	sf::Vector2f getPosition()
+	{
+		return rect.getPosition();
+	}
+
+	void setPosition(sf::Vector2f newPosition)
+	{
+		rect.setPosition(newPosition);
+	}
+
+	sf::Vector2f getSize()
+	{
+		return rect.getSize();
+	}
 };
 
 int main()
@@ -107,10 +145,10 @@ int main()
 
 	//Create walls
 	std::vector<Wall*> walls;
-	walls.push_back(new Wall(sf::Vector2f(20.f, 20.f), sf::Vector2f(250.f, 250.f)));
+	walls.push_back(new Wall(sf::Vector2f(200.f, 20.f), sf::Vector2f(500.f, 750.f)));
 
 	//Create player
-	Player player(sf::Vector2f(50.f, 50.f));
+	Player player(sf::Vector2f(50.f, 50.f), sf::Vector2f(window.getSize().x / 2, window.getSize().y / 2));
 	
 	//Setup time
 	std::chrono::duration<float, std::milli> timeDifference{};
@@ -139,14 +177,25 @@ int main()
 			{
 				if (event.key.code == sf::Keyboard::Space)
 				{
-					player.addForce(sf::Vector2f(0.f, -1000.f));
 					std::cout << "Jump\n";
+
+					if (player.getVelocity().y < 0.1 && player.getVelocity().y > -0.1)
+					{
+						player.addForce(sf::Vector2f(0.f, -1000.f));
+					}
 				}
 			}
 		}
 
 		//Logic loop
+		float length{ abs(player.getPosition().y - walls[0]->getPosition().y) };
+		float gap{length - (player.getSize().y / 2) - (walls[0]->getSize().y / 2)};
 
+		std::cout << length << '\n';
+		if (gap < 0)
+		{
+			player.setPosition(sf::Vector2f(0.f, walls[0]->getPosition().y - (walls[0]->getSize().y / 2) - (player.getSize().y / 2) ));
+		}
 
 
 
