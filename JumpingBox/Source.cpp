@@ -104,6 +104,11 @@ public:
 		//std::cout << rect.getPosition().y << '\n';
 	}
 
+	void setVelocity(sf::Vector2f newVelocity)
+	{
+		velocity = newVelocity;
+	}
+
 	void display(sf::RenderWindow& window)
 	{
 		window.draw(rect);
@@ -194,7 +199,7 @@ int main()
 		std::cout << length << '\n';
 		if (gap < 0)
 		{
-			player.setPosition(sf::Vector2f(0.f, walls[0]->getPosition().y - (walls[0]->getSize().y / 2) - (player.getSize().y / 2) ));
+			player.setPosition(sf::Vector2f(player.getPosition().x, walls[0]->getPosition().y - (walls[0]->getSize().y / 2) - (player.getSize().y / 2)));
 		}
 
 
