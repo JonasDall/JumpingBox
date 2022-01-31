@@ -3,12 +3,16 @@
 #include <chrono>
 #include <vector>
 
+//Custom colors
 sf::Color Grey(247, 249, 237, 250);
 sf::Color FaintBlue(132, 138, 250, 250);
 sf::Color FaintRed(250, 112, 103, 250);
 
+//Global constants
 const float gravity{ 9.80665 };
 
+
+//Classes
 class Wall
 {
 	sf::RectangleShape shape;
@@ -30,15 +34,16 @@ public:
 class Player
 {
 	sf::RectangleShape rect;
-	double movementSpeed{};
+	double movementSpeed{10.f};
 	sf::Vector2f velocity{};
 	double gravityModifier{ 100 };
 
 public:
-	Player(sf::Vector2f size, double speed) : movementSpeed{speed}
+	Player(sf::Vector2f size)
 	{
 		rect.setSize(size);
 		rect.setFillColor(FaintRed);
+		rect.setOrigin(sf::Vector2f(size.x / 2, size.y / 2));
 	}
 
 	void characterInput(sf::Event& event)
@@ -73,11 +78,6 @@ public:
 		{
 			addForce(sf::Vector2f(movementSpeed * -1, 0.f));
 		}
-		
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-		{
-			addForce(sf::Vector2f(0.f, movementSpeed * -1.f));
-		}
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 		{
@@ -99,21 +99,27 @@ public:
 
 int main()
 {
+	//~~INITIAL SETUP~~
 
+	//Setup window
 	sf::RenderWindow window(sf::VideoMode(1000, 1000), "Box");
 	window.setVerticalSyncEnabled(true);
+
+	//Create walls
 	std::vector<Wall*> walls;
-
-	Player player(sf::Vector2f(50.f, 50.f), 100.f);
-
 	walls.push_back(new Wall(sf::Vector2f(20.f, 20.f), sf::Vector2f(250.f, 250.f)));
 
+	//Create player
+	Player player(sf::Vector2f(50.f, 50.f));
+	
+	//Setup time
 	std::chrono::duration<float, std::milli> timeDifference{};
 	std::chrono::steady_clock::time_point currentTime{ std::chrono::steady_clock::now() };
 	double deltaTime{};
 
+	//~~BEGIN GAME LOOP~~
 
-
+	//Frame loop
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -122,40 +128,61 @@ int main()
 
 		while (window.pollEvent(event))
 		{
+			//Close window
 			if (event.type == sf::Event::Closed)
 			{
 				window.close();
 			}
-		}
-			//Logic loop
-			player.updatePosition(deltaTime);
 
-
-			// Render loop
-			window.clear(Grey);
-
-			for (unsigned int i{}; i < walls.size(); ++i)
+			//Jump
+			if (event.type == sf::Event::KeyPressed)
 			{
-				walls[i]->display(window);
+				if (event.key.code == sf::Keyboard::Space)
+				{
+					player.addForce(sf::Vector2f(0.f, -1000.f));
+					std::cout << "Jump\n";
+				}
 			}
-
-			player.display(window);
-
-			window.display();
-
-			//Calculate deltaTime
-			timeDifference = std::chrono::steady_clock::now() - currentTime;
-			deltaTime = timeDifference.count() / 1000;
-
-			currentTime = std::chrono::steady_clock::now();
-
-			std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
 		}
 
+		//Logic loop
+
+
+
+
+		player.updatePosition(deltaTime);
+
+		// Render loop
+		window.clear(Grey);
+
+		//Render walls
 		for (unsigned int i{}; i < walls.size(); ++i)
 		{
-			delete walls[i];
-			walls[i] = 0;
+			walls[i]->display(window);
 		}
-		return 0;
+
+		//Render player
+		player.display(window);
+
+		//Display
+		window.display();
+
+		//Calculate deltaTime
+		timeDifference = std::chrono::steady_clock::now() - currentTime;
+		deltaTime = timeDifference.count() / 1000;
+
+		currentTime = std::chrono::steady_clock::now();
+
+		//Print deltaTime
+		//std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
+		}
+
+	//Free wall memory
+	for (unsigned int i{}; i < walls.size(); ++i)
+	{
+		delete walls[i];
+		walls[i] = 0;
+	}
+
+	return 0;
 	}
