@@ -41,7 +41,7 @@ public:
 		rect.setFillColor(FaintRed);
 	}
 
-	void addInput(sf::Event& event)
+	void characterInput(sf::Event& event)
 	{
 		switch (event.key.code)
 		{
@@ -54,7 +54,7 @@ public:
 			break;
 
 		case sf::Keyboard::Space :
-			addForce(sf::Vector2f(0.f, movementSpeed));
+			addForce(sf::Vector2f(0.f, movementSpeed * 10 * -1));
 			break;
 		}
 	}
@@ -68,6 +68,21 @@ public:
 	void updatePosition(double deltaTime)
 	{
 		addForce(sf::Vector2f(0.f, (gravity * gravityModifier * deltaTime)));
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		{
+			addForce(sf::Vector2f(movementSpeed * -1, 0.f));
+		}
+		
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		{
+			addForce(sf::Vector2f(0.f, movementSpeed * -1.f));
+		}
+
+		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+		{
+			addForce(sf::Vector2f(movementSpeed, 0.f));
+		}
 
 		sf::Vector2f deltaPosition{ sf::Vector2f((velocity.x * deltaTime), velocity.y *deltaTime) };
 
@@ -84,7 +99,9 @@ public:
 
 int main()
 {
-	sf::RenderWindow window(sf::VideoMode(500, 500), "Box");
+
+	sf::RenderWindow window(sf::VideoMode(1000, 1000), "Box");
+	window.setVerticalSyncEnabled(true);
 	std::vector<Wall*> walls;
 
 	Player player(sf::Vector2f(50.f, 50.f), 100.f);
@@ -94,6 +111,8 @@ int main()
 	std::chrono::duration<float, std::milli> timeDifference{};
 	std::chrono::steady_clock::time_point currentTime{ std::chrono::steady_clock::now() };
 	double deltaTime{};
+
+
 
 	while (window.isOpen())
 	{
@@ -107,43 +126,36 @@ int main()
 			{
 				window.close();
 			}
+		}
+			//Logic loop
+			player.updatePosition(deltaTime);
 
-			if (event.type == sf::Event::KeyPressed)
+
+			// Render loop
+			window.clear(Grey);
+
+			for (unsigned int i{}; i < walls.size(); ++i)
 			{
-
+				walls[i]->display(window);
 			}
+
+			player.display(window);
+
+			window.display();
+
+			//Calculate deltaTime
+			timeDifference = std::chrono::steady_clock::now() - currentTime;
+			deltaTime = timeDifference.count() / 1000;
+
+			currentTime = std::chrono::steady_clock::now();
+
+			std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
 		}
 
-		//Logic loop
-		player.updatePosition(deltaTime);
-
-
-		// Render loop
-		window.clear(Grey);
-
-		for (unsigned int i {}; i < walls.size(); ++i)
+		for (unsigned int i{}; i < walls.size(); ++i)
 		{
-			walls[i]->display(window);
+			delete walls[i];
+			walls[i] = 0;
 		}
-		
-		player.display(window);
-
-		window.display();
-
-		//Calculate deltaTime
-		timeDifference = std::chrono::steady_clock::now() - currentTime;
-		deltaTime = timeDifference.count() / 1000;
-
-		currentTime = std::chrono::steady_clock::now();
-
-		std::cout << deltaTime << '\n';
+		return 0;
 	}
-
-	for (unsigned int i{}; i < walls.size(); ++i)
-	{
-		delete walls[i];
-		walls[i] = 0;
-	}
-
-	return 0;
-}
