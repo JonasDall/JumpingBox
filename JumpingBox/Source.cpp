@@ -49,6 +49,7 @@ class Player
 	double movementSpeed{10.f};
 	sf::Vector2f velocity{};
 	double gravityModifier{ 100 };
+	bool isJumping{ false };
 
 public:
 	Player(sf::Vector2f size, sf::Vector2f startPosition)
@@ -97,7 +98,19 @@ public:
 			addForce(sf::Vector2f(movementSpeed, 0.f));
 		}
 
+		if (isJumping)
+		{
+			isJumping = false;
+			addForce(sf::Vector2f(0.f, -1000.f));
+			rect.move(sf::Vector2f(0.f, -5.f));
+		}
+
 		sf::Vector2f deltaPosition{ sf::Vector2f((velocity.x * deltaTime), velocity.y *deltaTime) };
+
+		if (velocity.y < 0)
+		{
+			std::cout << velocity.x << " " << velocity.y << '\n';
+		}
 
 		rect.move(deltaPosition);
 
@@ -138,6 +151,11 @@ public:
 	{
 		return rect.getSize();
 	}
+
+	void jump()
+	{
+		isJumping = true;
+	}
 };
 
 int main()
@@ -150,7 +168,7 @@ int main()
 
 	//Create walls
 	std::vector<Wall*> walls;
-	walls.push_back(new Wall(sf::Vector2f(200.f, 20.f), sf::Vector2f(500.f, 750.f)));
+	walls.push_back(new Wall(sf::Vector2f(1000.f, 20.f), sf::Vector2f(500.f, 750.f)));
 
 	//Create player
 	Player player(sf::Vector2f(50.f, 50.f), sf::Vector2f(window.getSize().x / 2, window.getSize().y / 2));
@@ -186,7 +204,8 @@ int main()
 
 					if (player.getVelocity().y < 0.1 && player.getVelocity().y > -0.1)
 					{
-						player.addForce(sf::Vector2f(0.f, -1000.f));
+						player.jump();
+
 					}
 				}
 			}
@@ -196,9 +215,10 @@ int main()
 		float length{ abs(player.getPosition().y - walls[0]->getPosition().y) };
 		float gap{length - (player.getSize().y / 2) - (walls[0]->getSize().y / 2)};
 
-		std::cout << length << '\n';
+		//std::cout << length << '\n';
 		if (gap < 0)
 		{
+			player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
 			player.setPosition(sf::Vector2f(player.getPosition().x, walls[0]->getPosition().y - (walls[0]->getSize().y / 2) - (player.getSize().y / 2)));
 		}
 
