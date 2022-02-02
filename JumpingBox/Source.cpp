@@ -12,6 +12,11 @@ sf::Color FaintRed(250, 112, 103, 250);
 //Global constants
 const float gravity{ 9.80665 };
 
+//Global functions
+bool checkIntersection()
+{
+	return false;
+}
 
 //Classes
 class Wall
@@ -50,6 +55,7 @@ class Player
 	sf::Vector2f velocity{};
 	double gravityModifier{ 100 };
 	bool isJumping{ false };
+	float bounciness{0.5};
 
 public:
 	Player(sf::Vector2f size, sf::Vector2f startPosition)
@@ -156,6 +162,11 @@ public:
 	{
 		isJumping = true;
 	}
+
+	float getBounciness()
+	{
+		return bounciness;
+	}
 };
 
 int main()
@@ -212,16 +223,40 @@ int main()
 		}
 
 		//Logic loop
+
+		//Check Y
+
+		{
+			for (unsigned int i{}; i < walls.size(); ++i)
+			{
+
+				if ((player.getPosition().x < (walls[i]->getPosition().x + walls[i]->getSize().x)) &&
+					((player.getPosition().x + player.getSize().x) > walls[i]->getPosition().x) &&
+					((player.getPosition().y < (walls[i]->getPosition().y + walls[i]->getSize().y)) &&
+					((player.getPosition().y + player.getSize().y) > walls[i]->getPosition().y)))
+				{
+					std::cout << "Hit object\n";
+				}
+			}
+		}
+
+		//Check X
+
+		{
+
+		}
+
+
+		/*
 		float length{ abs(player.getPosition().y - walls[0]->getPosition().y) };
 		float gap{length - (player.getSize().y / 2) - (walls[0]->getSize().y / 2)};
 
-		//std::cout << length << '\n';
 		if (gap < 0)
 		{
 			player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
 			player.setPosition(sf::Vector2f(player.getPosition().x, walls[0]->getPosition().y - (walls[0]->getSize().y / 2) - (player.getSize().y / 2)));
 		}
-
+		*/
 
 
 		player.updatePosition(deltaTime);
