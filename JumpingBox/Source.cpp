@@ -229,23 +229,21 @@ int main()
 		{
 			for (unsigned int i{}; i < walls.size(); ++i)
 			{
-
-				if ((player.getPosition().x < (walls[i]->getPosition().x + walls[i]->getSize().x)) &&
-					((player.getPosition().x + player.getSize().x) > walls[i]->getPosition().x) &&
-					((player.getPosition().y < (walls[i]->getPosition().y + walls[i]->getSize().y)) &&
+				if (((player.getPosition().x < (walls[i]->getPosition().x + walls[i]->getSize().x)) 
+					&&
+					((player.getPosition().x + player.getSize().x) > walls[i]->getPosition().x)) 
+					&&
+					((player.getPosition().y < (walls[i]->getPosition().y + walls[i]->getSize().y)) 
+					&&
 					((player.getPosition().y + player.getSize().y) > walls[i]->getPosition().y)))
-				{
-					std::cout << "Hit object\n";
-				}
+					{
+						std::cout << "Hit x axis\n";
+						player.setVelocity(sf::Vector2f(player.getVelocity().x, player.getVelocity().y * -1 * player.getBounciness()));
+					}
 			}
 		}
 
 		//Check X
-
-		{
-
-		}
-
 
 		/*
 		float length{ abs(player.getPosition().y - walls[0]->getPosition().y) };
@@ -283,7 +281,7 @@ int main()
 		currentTime = std::chrono::steady_clock::now();
 
 		//Print deltaTime
-		//std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
+		std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
 		}
 
 	//Free wall memory
