@@ -22,6 +22,7 @@ bool checkIntersection()
 class Wall
 {
 	sf::RectangleShape shape;
+	sf::RectangleShape origin;
 
 public:
 	Wall(sf::Vector2f size, sf::Vector2f location)
@@ -30,11 +31,13 @@ public:
 		shape.setPosition(location);
 		shape.setOrigin(sf::Vector2f(size.x / 2, size.y / 2));
 		shape.setFillColor(FaintBlue);
+		origin.setPosition(shape.getOrigin());
 	}
 
 	void display(sf::RenderWindow& window)
 	{
 		window.draw(shape);
+		window.draw(origin);
 	}
 
 	sf::Vector2f getPosition()
@@ -51,11 +54,14 @@ public:
 class Player
 {
 	sf::RectangleShape rect;
-	double movementSpeed{10.f};
+	double movementSpeed{100.f};
 	sf::Vector2f velocity{};
 	double gravityModifier{ 100 };
 	bool isJumping{ false };
 	float bounciness{0.5};
+	bool isOnGround{ 0 };
+	float jumpStrength{ -500 };
+	float airResistance{ 0.5 };
 
 public:
 	Player(sf::Vector2f size, sf::Vector2f startPosition)
@@ -93,6 +99,7 @@ public:
 	void updatePosition(double deltaTime)
 	{
 		addForce(sf::Vector2f(0.f, (gravity * gravityModifier * deltaTime)));
+		setVelocity(sf::Vector2f(getVelocity().x * airResistance, getVelocity().y));
 
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 		{
@@ -107,19 +114,15 @@ public:
 		if (isJumping)
 		{
 			isJumping = false;
-			addForce(sf::Vector2f(0.f, -1000.f));
-			rect.move(sf::Vector2f(0.f, -5.f));
+			addForce(sf::Vector2f(0.f, jumpStrength));
+			rect.move(sf::Vector2f(0.f, -20.f));
 		}
 
-		sf::Vector2f deltaPosition{ sf::Vector2f((velocity.x * deltaTime), velocity.y *deltaTime) };
-
-		if (velocity.y < 0)
-		{
-			std::cout << velocity.x << " " << velocity.y << '\n';
-		}
+		sf::Vector2f deltaPosition{ sf::Vector2f((velocity.x * deltaTime), velocity.y * deltaTime) };
 
 		rect.move(deltaPosition);
 
+		isOnGround = false;
 		//std::cout << rect.getPosition().y << '\n';
 	}
 
@@ -167,6 +170,16 @@ public:
 	{
 		return bounciness;
 	}
+
+	void setOnGround(bool state)
+	{
+		isOnGround = state;
+	}
+
+	bool getOnGround()
+	{
+		return isOnGround;
+	}
 };
 
 int main()
@@ -196,32 +209,6 @@ int main()
 	{
 		sf::Event event;
 
-		//Input loop
-
-		while (window.pollEvent(event))
-		{
-			//Close window
-			if (event.type == sf::Event::Closed)
-			{
-				window.close();
-			}
-
-			//Jump
-			if (event.type == sf::Event::KeyPressed)
-			{
-				if (event.key.code == sf::Keyboard::Space)
-				{
-					std::cout << "Jump\n";
-
-					if (player.getVelocity().y < 0.1 && player.getVelocity().y > -0.1)
-					{
-						player.jump();
-
-					}
-				}
-			}
-		}
-
 		//Logic loop
 
 		//Check Y
@@ -237,8 +224,14 @@ int main()
 					&&
 					((player.getPosition().y + player.getSize().y) > walls[i]->getPosition().y)))
 					{
-						std::cout << "Hit x axis\n";
-						player.setVelocity(sf::Vector2f(player.getVelocity().x, player.getVelocity().y * -1 * player.getBounciness()));
+						std::cout << player.getVelocity().y << '\n';
+						//player.setVelocity(sf::Vector2f(player.getVelocity().x, player.getVelocity().y * -1 * player.getBounciness()));
+						if (player.getVelocity().y > 0)
+						{
+							player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
+						}
+						player.setPosition(sf::Vector2f(player.getPosition().x, walls[i]->getPosition().y - ((walls[i]->getSize().y / 2) + (player.getSize().y / 2))));
+						player.setOnGround(true);
 					}
 			}
 		}
@@ -256,6 +249,34 @@ int main()
 		}
 		*/
 
+		//Input loop
+
+		while (window.pollEvent(event))
+		{
+			//Close window
+			if (event.type == sf::Event::Closed)
+			{
+				window.close();
+			}
+
+			//Jump
+			if (event.type == sf::Event::KeyPressed)
+			{
+				if (event.key.code == sf::Keyboard::Space)
+				{
+					if (player.getOnGround())
+					{
+						player.jump();
+						std::cout << "Jump\n";
+					}
+				}
+
+				if (event.key.code == sf::Keyboard::Escape)
+				{
+					window.close();
+				}
+			}
+		}
 
 		player.updatePosition(deltaTime);
 
@@ -281,7 +302,7 @@ int main()
 		currentTime = std::chrono::steady_clock::now();
 
 		//Print deltaTime
-		std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
+		//std::cout << "Deltatime: " << deltaTime << " FPS: " << 1 / deltaTime << '\n';
 		}
 
 	//Free wall memory
